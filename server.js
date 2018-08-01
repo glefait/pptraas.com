@@ -20,12 +20,10 @@ const randomUUID = require('random-uuid');
 const fs = require('fs');
 const util = require('util');
 const marked = require('marked');
-const ua = require('universal-analytics');
 const {URL} = require('url');
 const gsearch = require('./helpers/gsearch.js');
 
 const PORT = process.env.PORT || 8080;
-const GA_ACCOUNT = 'UA-114816386-1';
 const app = express();
 
 const isAllowedUrl = (string) => {
@@ -47,10 +45,6 @@ app.use((request, response, next) => {
 
   response.set('Access-Control-Allow-Origin', '*');
 
-  // Record GA hit.
-  const visitor = ua(GA_ACCOUNT, {https: true});
-  visitor.pageview(request.originalUrl).send();
-
   next();
 });
 
@@ -64,7 +58,6 @@ app.get('/', async (request, response) => {
     <head>
       <title>Puppeteer as a service</title>
       <meta name="description" content="A hosted service that makes the Chrome Puppeteer API accessible via REST based queries. Tracing, Screenshots and PDFs" />
-      <meta name="google-site-verification" content="4Tf-yH47m_tR7aSXu7t3EI91Gy4apbwnhg60Jzq_ieY" />
       <style>
         body {
           padding: 40px;
@@ -76,15 +69,6 @@ app.get('/', async (request, response) => {
       </style>
     </head>
     <body>${marked(md)}</body>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ACCOUNT}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', '${GA_ACCOUNT}');
-    </script>
     </html>
   `);
   /* eslint-enable */
@@ -108,12 +92,32 @@ app.get('/screenshot', async (request, response) => {
     return response.status(400).send(
       'Please provide a URL. Example: ?url=https://example.com');
   }
-
+  var width = 1980;
+  try{
+    if(request.query.width){
+      width = parseInt(request.query.width);
+    }
+  } catch (err) {
+    return response.status(400).send(
+      'width is not an integer');
+  }
+  if (!width) {
+    width = 1980;
+  }
+  var height = 1080;
+  try{
+    if(request.query.height){
+      height = parseInt(request.query.height);
+    }
+  } catch (err) {
+    return response.status(400).send(
+      'height is not an integer');
+  }
   // Default to a reasonably large viewport for full page screenshots.
   const viewport = {
-    width: 1280,
-    height: 1024,
-    deviceScaleFactor: 2
+    width: width,
+    height: height,
+    deviceScaleFactor: 1
   };
 
   let fullPage = true;
