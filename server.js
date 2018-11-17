@@ -86,6 +86,37 @@ app.all('*', async (request, response, next) => {
   next(); // pass control on to routes.
 });
 
+app.get('/jstags', async (request, response) => {
+  const url = request.query.url;
+  if (!url) {
+    return response.status(400).send(
+      'Please provide a URL. Example: ?url=https://example.com');
+  }
+
+  const browser = response.locals.browser;
+
+  try {
+    const page = await browser.newPage();
+    await page.goto(url, {waitUntil: 'networkidle0'});
+
+    const scripts = await page.evaluate(() => {
+      let scripts = []; // Create an empty array that will store our data
+      let elements = document.querySelectorAll('script:not([type="application/ld+json"]), link[rel="import"]'); // Select all Products
+      for (var element of elements){ // Loop through each proudct
+         let src = element.src;
+         scripts.push(src);
+      }
+      return scripts;
+    });
+    const cookies = await page.cookies();
+    data = {'scripts': scripts, 'cookies': cookies}
+    response.type('application/json').send(JSON.stringify(data));
+  } catch (err) {
+    response.status(500).send(err.toString());
+  }
+  await browser.close();
+});
+
 app.get('/screenshot', async (request, response) => {
   const url = request.query.url;
   if (!url) {
