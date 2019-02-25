@@ -186,7 +186,19 @@ app.get('/screenshot', async (request, response) => {
       };
     }
 
-    const buffer = await page.screenshot(opts);
+    let buffer;
+
+    const element = request.query.element;
+    if (element) {
+      const elementHandle = await page.$(element);
+      if (!elementHandle) {
+        return response.status(404).send(
+          `Element ${element} not found`);
+      }
+      buffer = await elementHandle.screenshot();
+    } else {
+      buffer = await page.screenshot(opts);
+    }
     response.type('image/png').send(buffer);
   } catch (err) {
     response.status(500).send(err.toString());
@@ -251,7 +263,8 @@ app.get('/ssr', async (request, response) => {
 
     // Remove scripts(except structured data) and html imports. They've already executed and loaded on the page.
     await page.evaluate(() => {
-      const elements = document.querySelectorAll('script:not([type="application/ld+json"]), link[rel="import"]');
+      const elements = document.querySelectorAll(
+        'script:not([type="application/ld+json"]), link[rel="import"]');
       elements.forEach(e => e.remove());
     });
 
