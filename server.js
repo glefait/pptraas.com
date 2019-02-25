@@ -85,6 +85,16 @@ app.all('*', async (request, response, next) => {
 
   next(); // pass control on to routes.
 });
+_getStorage = async () =>
+    await this.page.evaluate(() => {
+      let value, storage = {}
+      for (let key in localStorage) {
+        if (value = localStorage.getItem(key))
+          storage[key] = value
+      }
+
+      return storage
+    })
 
 app.get('/jstags', async (request, response) => {
   const url = request.query.url;
@@ -99,17 +109,46 @@ app.get('/jstags', async (request, response) => {
     const page = await browser.newPage();
     await page.goto(url, {waitUntil: 'networkidle0'});
 
+    const storage = await page.evaluate(() => {
+        let value, storage = {};
+        for (let key in localStorage) {
+          if (value = localStorage.getItem(key))
+            storage[key] = value;
+        }
+        return storage;
+    });
     const scripts = await page.evaluate(() => {
       let scripts = []; // Create an empty array that will store our data
       let elements = document.querySelectorAll('script:not([type="application/ld+json"]), link[rel="import"]'); // Select all Products
       for (var element of elements){ // Loop through each proudct
-         let src = element.src;
-         scripts.push(src);
+         if(element.src){
+           let src = element.src;
+           scripts.push(src);
+         }
       }
       return scripts;
     });
+    const loaders = await page.evaluate(() => {
+      let loaders = []; // Create an empty array that will store our data
+      let elements = document.querySelectorAll('script:not([type="application/ld+json"]), link[rel="import"]'); // Select all Products
+      for (var element of elements){ // Loop through each proudct
+         if(!element.src){
+           let content = element.text;
+           loaders.push(content);
+         }
+      }
+      return loaders;
+    });
     const cookies = await page.cookies();
-    data = {'scripts': scripts, 'cookies': cookies}
+    const links = await page.evaluate(() => {
+      let links = []; // Create an empty array that will store our data
+      let elements = document.querySelectorAll('a');
+      for (var element of elements){
+        links.push(element.href);
+      }
+      return links
+    });
+    data = {'scripts': scripts, 'loaders': loaders, 'cookies': cookies, 'storage': storage, 'links': links}
     response.type('application/json').send(JSON.stringify(data));
   } catch (err) {
     response.status(500).send(err.toString());
@@ -301,6 +340,13 @@ app.get('/trace', async (request, response) => {
   }
 
   await browser.close();
+});
+
+app.get('/vv', async (request, response) => {
+  const browser = response.locals.browser;
+  const ua = await browser.userAgent();
+  await browser.close();
+  response.send(ua);
 });
 
 app.get('/version', async (request, response) => {

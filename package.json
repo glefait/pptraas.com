@@ -5,10 +5,14 @@
   "description": "Puppeteer as a service",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node ./server.js",
+    "dev": "node ./server.js",
     "deploy": "gcloud app deploy . --project puppeteerexamples",
     "lint": "eslint .",
     "test": "npm run lint"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.3"
   },
   "dependencies": {
     "caniuse-db": "^1.0.30000899",
@@ -16,7 +20,8 @@
     "marked": "^0.5.1",
     "puppeteer": "^1.9.0",
     "random-uuid": "*",
-    "universal-analytics": "^0.4.20"
+    "universal-analytics": "^0.4.20",
+    "nodemon": "^1.17.3"
   },
   "engines": {
     "node": ">=8"

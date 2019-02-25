@@ -6,3 +6,6 @@ services:
     image: glpttraas
     ports:
       - 8080:8080
+    volumes:
+      - ./code:/code
+    command: npm run dev
