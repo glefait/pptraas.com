@@ -95,20 +95,49 @@ _getStorage = async () =>
 
       return storage
     })
-
+function delay(time) {
+   return new Promise(function(resolve) {
+       setTimeout(resolve, time)
+   });
+}
 app.get('/jstags', async (request, response) => {
   const url = request.query.url;
   if (!url) {
     return response.status(400).send(
-      'Please provide a URL. Example: ?url=https://example.com');
+      'Please provide a URL. Example: /jstags?url=https://example.com');
   }
 
   const browser = response.locals.browser;
 
   try {
-    const page = await browser.newPage();
-    await page.goto(url, {waitUntil: 'networkidle0'});
+    var page = await browser.newPage();
+    await page.goto(url, {waitUntil: 'networkidle2', referer: 'https://www.google.fr/'});
+    await delay(3000);
+    await page.goto(url, {waitUntil: 'networkidle2', referer: url});
+    await delay(3000);
+  /*  const navigationPromise = page.waitForNavigation();
+    await page.click('a');
+    await navigationPromise;
+*/
+    // detect more scrolling
 
+    const autoScroll = async (page) => {
+      await page.evaluate(async () => {
+        await new Promise((resolve, reject) => {
+          let totalHeight = 0
+          let distance = 100
+          let timer = setInterval(() => {
+            let scrollHeight = document.body.scrollHeight
+            window.scrollBy(0, distance)
+            totalHeight += distance
+            if(totalHeight >= scrollHeight){
+              clearInterval(timer)
+              resolve()
+            }
+          }, 100)
+        })
+      })
+    }
     const storage = await page.evaluate(() => {
         let value, storage = {};
         for (let key in localStorage) {
@@ -346,7 +375,7 @@ app.get('/vv', async (request, response) => {
   const browser = response.locals.browser;
   const ua = await browser.userAgent();
   await browser.close();
-  response.send(ua);
+  response.send('lolfdsfdsf');
 });
 
 app.get('/version', async (request, response) => {

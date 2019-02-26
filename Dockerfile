@@ -1,7 +1,7 @@
 FROM kinlan/puppets:latest
 
 # Copy the app
-COPY . /app/
+COPY ./machine/ /app/
 #COPY local.conf /etc/fonts/local.conf
 WORKDIR app
 RUN npm i

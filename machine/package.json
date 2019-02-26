@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node ./server.js",
-    "dev": "node ./server.js",
+    "dev": "node ./js/server.js",
     "deploy": "gcloud app deploy . --project puppeteerexamples",
     "lint": "eslint .",
     "test": "npm run lint"
